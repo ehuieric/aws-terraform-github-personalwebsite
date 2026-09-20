@@ -10,7 +10,7 @@ jobs:
   listing_buckets:
     runs-on: ubuntu-latest
     steps:
-      - name: set up AWS Credentials
+      - name: Set up AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6   
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
