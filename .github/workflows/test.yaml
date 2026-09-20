@@ -24,6 +24,6 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: List S3 Buckets
-        run: |
+        run: 
           echo "Listing S3 Buckets"
           aws s3 ls
