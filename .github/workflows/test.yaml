@@ -8,7 +8,7 @@ on
 
 Jobs:
   logs_message:
-  runs-on: ubuntu-latest
-  steos:
-    - name: log
-      run: echo "The workflow is working!"    
+    runs-on: ubuntu-latest
+    steps:
+      - name: log
+        run: echo "The workflow is working!"    
