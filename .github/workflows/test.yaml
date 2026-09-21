@@ -40,11 +40,11 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3    
+        uses: hashicorp/setup-terraform@v4    
 
       - name: Initialize Terraform
         run: terraform init
-        working directorty: terraform
+        working-directorty: terraform
 
       - name: Terraform Plan
         env: 
@@ -52,12 +52,12 @@ jobs:
         run: 
           terraform plan \
             -var="bucket_name=$BUCKET_NAME"
-        working directorty: terraform
+        working-directorty: terraform
 
       - name: Terraform Apply
         env:
           TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
         run: terraform apply -auto-approve
-        working directorty: terraform
+        working-directorty: terraform
 
       
