@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "static_site225" {
   bucket = var.bucket_name
 }
 
-resource "aws s3 bucket_website_configuration" "static_website_config" {
+resource "aws_s3_bucket_website_configuration" "static_website_config" {
    bucket = aws_s3_bucket.static_site225.id
 
 index_document {
