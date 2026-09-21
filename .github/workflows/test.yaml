@@ -11,11 +11,11 @@ permissions:
   contents: read
 
 jobs:
-  creating_buckets:
+  creating_bucket:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
 
       - name: Show OIDC subject
