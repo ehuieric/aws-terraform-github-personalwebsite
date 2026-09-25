@@ -40,3 +40,20 @@ resource "aws_s3_bucket_public_access_block" "static_site_access" {
 
 #    depends_on = [ aws_s3_bucket_public_access_block.static_site_access ]
 # }
+
+resource "aws_acm_certificate" "ehuieric_cert" {
+  domain_name       = "ericehui.com"
+  validation_method = "DNS"
+
+  subject_alternative_names = [
+    "www.ericehui.com"
+  ]
+
+  tags = {
+    Name = "ericehui.com SSL Certificate"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
