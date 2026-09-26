@@ -89,8 +89,8 @@ resource "aws_acm_certificate_validation" "ehuieric_cert_validation" {
 }
 
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "oac-${aws_s3_bucket.static_site.bucket}"
-  description                       = "OAC for ${aws_s3_bucket.static_site.bucket}"
+  name                              = "oac-${aws_s3_bucket.static_site225.bucket}"
+  description                       = "OAC for ${aws_s3_bucket.static_site225.bucket}"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -102,7 +102,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name              = aws_s3_bucket.static_site.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-    origin_id                = "S3-${aws_s3_bucket.static_site.bucket}"
+    origin_id                = "S3-${aws_s3_bucket.static_site225.bucket}"
   }
 
   enabled             = true
@@ -117,7 +117,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.static_site.bucket}"
+    target_origin_id = "S3-${aws_s3_bucket.static_site225.bucket}"
 
     forwarded_values {
       query_string = false
@@ -168,7 +168,7 @@ resource "aws_s3_bucket_policy" "static_site_policy" {
                     service = "cloudfront.amazonaws.com"
                 }
                 Action = "s3:GetObject"
-                resource = "${aws_s3_bucket.static_site.arn}/*"
+                resource = "${aws_s3_bucket.static_site225.arn}/*"
                 Condition = {
                   StringEquals = {
                     "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
