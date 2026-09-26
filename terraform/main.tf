@@ -184,3 +184,39 @@ resource "aws_s3_bucket_policy" "static_site225_policy" {
     aws_s3_bucket_public_access_block.website_access
   ]
 }
+
+# Route both domain names to CloudFront over IPv4.
+resource "aws_route53_record" "website_a" {
+  for_each = toset([
+    "ericehui.com",
+    "www.ericehui.com"
+  ])
+
+  zone_id = data.aws_route53_zone.domain_zone.zone_id
+  name    = each.value
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# Route both domain names to CloudFront over IPv6.
+resource "aws_route53_record" "website_aaaa" {
+  for_each = toset([
+    "ericehui.com",
+    "www.ericehui.com"
+  ])
+
+  zone_id = data.aws_route53_zone.domain_zone.zone_id
+  name    = each.value
+  type    = "AAAA"
+
+  alias {
+    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
