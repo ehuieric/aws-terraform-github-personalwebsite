@@ -1,0 +1,56 @@
+name: Destroy website infrastructure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: website-terraform-destroy
+  cancel-in-progress: false
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_bucket_name: aws-personal-website-225
+      TF_IN_AUTOMATION: "true"
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: us-east-1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: Initialize Terraform
+        run: terraform init -input=false
+
+      - name: Enable automatic bucket emptying
+        run: |
+          terraform apply \
+            -input=false \
+            -auto-approve \
+            -target=aws_s3_bucket.website_bucket
+
+      - name: Plan destruction
+        run: terraform plan -destroy -input=false -out=destroy.tfplan
+
+      - name: Destroy managed resources
+        run: terraform apply -input=false destroy.tfplan
+
+      - name: Show remaining state
+        run: terraform state list

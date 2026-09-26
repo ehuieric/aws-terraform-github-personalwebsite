@@ -1,17 +1,8 @@
 # Import the existing website bucket.
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "aws-personal-website-225"
-
-  lifecycle {
-    prevent_destroy = true
-  }
+    bucket        = "aws-personal-website-225"
+     force_destroy = true
 }
-
-import {
-  to = aws_s3_bucket.website_bucket
-  id = "aws-personal-website-225"
-}
-
 # Stop managing the OLD bucket without deleting it.
 # These blocks require Terraform 1.7 or newer.
 removed {
