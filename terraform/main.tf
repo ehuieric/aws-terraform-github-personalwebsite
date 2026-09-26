@@ -74,7 +74,7 @@ resource "aws_route53_record" "ehuieric_cert_validation" {
     }
   }
 
-  zone_id = "data.aws_route53_record.domain_zone.zone_id"
+  zone_id = "data.aws_route53_zone.domain_zone.zone_id"
   name    = each.value.name
   records = [each.value.record]
   ttl     = 60
