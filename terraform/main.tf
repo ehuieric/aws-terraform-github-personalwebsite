@@ -74,7 +74,7 @@ resource "aws_route53_record" "ehuieric_cert_validation" {
     }
   }
 
-  zone_id = "data.aws_route53_zone.domain_zone.zone_id"
+  zone_id = data.aws_route53_zone.domain_zone.zone_id
   name    = each.value.name
   records = [each.value.record]
   ttl     = 60
@@ -83,9 +83,7 @@ resource "aws_route53_record" "ehuieric_cert_validation" {
 
 resource "aws_acm_certificate_validation" "ehuieric_cert_validation" {
   certificate_arn = aws_acm_certificate.ehuieric_cert.arn
-
-  validation_record_fqdns = [
-    for record in aws_route53_record.ehuieric_cert_validation :
+   validation_record_fqdns = [for record in aws_route53_record.ehuieric_cert_validation :
     record.fqdn
   ]
 }
