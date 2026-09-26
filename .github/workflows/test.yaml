@@ -46,6 +46,10 @@ jobs:
         run: terraform init
         working-directory: terraform
 
+      - name: List managed resources
+        working-directory: terraform
+        run: terraform state list
+
 
       - name: Verify website bucket matches
         working-directory: terraform
@@ -60,19 +64,15 @@ jobs:
               }
           '
 
-      - name: Terraform Plan
-        env: 
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
-        run: |
-          terraform plan \
-            -var="bucket_name=$BUCKET_NAME"
+      - name: Preview target bucket change
         working-directory: terraform
+        run: terraform plan -input=false -var="bucket_name=aws-personal-website-225"
 
-      - name: Terraform Apply
-        env:
-          TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
-        run: terraform apply -auto-approve
-        working-directory: terraform
+      # - name: Terraform Apply
+      #   env:
+      #     TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
+      #   run: terraform apply -auto-approve
+      #   working-directory: terraform
 
 
       - name: Uploading file to S3 bUCKET
