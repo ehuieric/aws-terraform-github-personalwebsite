@@ -157,25 +157,25 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   depends_on = [ aws_acm_certificate.ehuieric_cert ]
 }
 
-resource "aws_s3_bucket_policy" "static_site225_policy" {
-    bucket = aws_s3_bucket.static_site225.id
-    policy = jsonencode({
-        version = "2021-10-17"
-        Statement = [
-            {
-                Effect = "Allow"
-                principal = {
-                    service = "cloudfront.amazonaws.com"
-                }
-                Action = "s3:GetObject"
-                resource = "${aws_s3_bucket.static_site225.arn}/*"
-                Condition = {
-                  StringEquals = {
-                    "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
-                  }
-                }
-            }
-        ]
-    })
-  
+resource "aws_s3_bucket_policy" "static_site_policy" {
+  bucket = aws_s3_bucket.static_site225.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.static_site225.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
+          }
+        }
+      }
+    ]
+  })
 }
