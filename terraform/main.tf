@@ -58,6 +58,12 @@ resource "aws_acm_certificate" "ehuieric_cert" {
   }
 }
 
+data "aws_route53_zone" "domain_zone" {
+  name         = "ericehui.com"
+  private_zone = false
+}
+
+
 resource "aws_route53_record" "ehuieric_cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.ehuieric_cert.domain_validation_options :
@@ -68,7 +74,7 @@ resource "aws_route53_record" "ehuieric_cert_validation" {
     }
   }
 
-  zone_id = "my zone id"
+  zone_id = "data.aws_route53_record.domain_zone.zone_id"
   name    = each.value.name
   records = [each.value.record]
   ttl     = 60
@@ -83,3 +89,4 @@ resource "aws_acm_certificate_validation" "ehuieric_cert_validation" {
     record.fqdn
   ]
 }
+
