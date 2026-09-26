@@ -100,7 +100,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name              = aws_s3_bucket.static_site.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.static_site225.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = "S3-${aws_s3_bucket.static_site225.bucket}"
   }
@@ -154,7 +154,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   }
 
-  depends_on = [ aws_acm_certificate.ehuieric_cert_validation ]
+  depends_on = [ aws_acm_certificate.ehuieric_cert ]
 }
 
 resource "aws_s3_bucket_policy" "static_site_policy" {
