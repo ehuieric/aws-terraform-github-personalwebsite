@@ -64,9 +64,9 @@ jobs:
               }
           '
 
-      - name: Preview target bucket change
+      - name: Terraform Plan
         working-directory: terraform
-        run: terraform plan -input=false -var="bucket_name=aws-personal-website-225"
+        run: terraform plan -input=false
 
       # - name: Terraform Apply
       #   env:

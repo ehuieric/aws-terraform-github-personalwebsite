@@ -1,19 +1,39 @@
-resource "aws_s3_bucket" "static_site225" {
-  bucket = var.bucket_name
+# Import the existing website bucket.
+resource "aws_s3_bucket" "website_bucket" {
+  bucket = "aws-personal-website-225"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-# resource "aws_s3_bucket_website_configuration" "static_website_config" {
-#    bucket = aws_s3_bucket.static_site225.id
+import {
+  to = aws_s3_bucket.website_bucket
+  id = "aws-personal-website-225"
+}
 
-# index_document {
-#     suffix = "index.html"
+# Stop managing the OLD bucket without deleting it.
+# These blocks require Terraform 1.7 or newer.
+removed {
+  from = aws_s3_bucket.static_site225
 
-#  }
-# }
+  lifecycle {
+    destroy = false
+  }
+}
 
+removed {
+  from = aws_s3_bucket_public_access_block.static_site_access
 
-resource "aws_s3_bucket_public_access_block" "static_site_access" {
-  bucket = aws_s3_bucket.static_site225.id
+  lifecycle {
+    destroy = false
+  }
+}
+
+# Keep the website bucket private.
+# CloudFront accesses it through OAC and the bucket policy below.
+resource "aws_s3_bucket_public_access_block" "website_access" {
+  bucket = aws_s3_bucket.website_bucket.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -21,26 +41,8 @@ resource "aws_s3_bucket_public_access_block" "static_site_access" {
   restrict_public_buckets = true
 }
 
-
-# resource "aws_s3_bucket_policy" "static_site_policy" {
-#   bucket = aws_s3_bucket.static_site225.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect    = "Allow"
-#         Principal = "*"
-#         Action    = "s3:GetObject"
-#         Resource  = "${aws_s3_bucket.static_site225.arn}/*"
-#       }
-#     ]
-#   })
-
-
-#    depends_on = [ aws_s3_bucket_public_access_block.static_site_access ]
-# }
-
+# Certificate for CloudFront.
+# The AWS provider must use us-east-1.
 resource "aws_acm_certificate" "ehuieric_cert" {
   domain_name       = "ericehui.com"
   validation_method = "DNS"
@@ -58,12 +60,13 @@ resource "aws_acm_certificate" "ehuieric_cert" {
   }
 }
 
+# Look up the existing public hosted zone.
 data "aws_route53_zone" "domain_zone" {
   name         = "ericehui.com"
   private_zone = false
 }
 
-
+# Create the certificate's DNS validation records.
 resource "aws_route53_record" "ehuieric_cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.ehuieric_cert.domain_validation_options :
@@ -81,28 +84,30 @@ resource "aws_route53_record" "ehuieric_cert_validation" {
   type    = each.value.type
 }
 
+# Wait for ACM to validate the certificate.
 resource "aws_acm_certificate_validation" "ehuieric_cert_validation" {
   certificate_arn = aws_acm_certificate.ehuieric_cert.arn
-   validation_record_fqdns = [for record in aws_route53_record.ehuieric_cert_validation :
+
+  validation_record_fqdns = [
+    for record in aws_route53_record.ehuieric_cert_validation :
     record.fqdn
   ]
 }
 
+# Allow CloudFront to sign requests to S3.
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "oac-${aws_s3_bucket.static_site225.bucket}"
-  description                       = "OAC for ${aws_s3_bucket.static_site225.bucket}"
+  name                              = "oac-${aws_s3_bucket.website_bucket.bucket}"
+  description                       = "OAC for ${aws_s3_bucket.website_bucket.bucket}"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
-
-
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name              = aws_s3_bucket.static_site225.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-    origin_id                = "S3-${aws_s3_bucket.static_site225.bucket}"
+    origin_id                = "S3-${aws_s3_bucket.website_bucket.bucket}"
   }
 
   enabled             = true
@@ -110,14 +115,15 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   comment             = "Some comment"
   default_root_object = "index.html"
 
-
-
-  aliases = ["ericehui.com", "www.ericehui.com"]
+  aliases = [
+    "ericehui.com",
+    "www.ericehui.com"
+  ]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.static_site225.bucket}"
+    target_origin_id = "S3-${aws_s3_bucket.website_bucket.bucket}"
 
     forwarded_values {
       query_string = false
@@ -133,43 +139,38 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     max_ttl                = 86400
   }
 
-
-
- 
-
   price_class = "PriceClass_200"
 
   restrictions {
     geo_restriction {
       restriction_type = "none"
-    
     }
   }
 
- 
-
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate.ehuieric_cert.arn
-    ssl_support_method = "sni-only"
-
+    acm_certificate_arn = aws_acm_certificate_validation.ehuieric_cert_validation.certificate_arn
+    ssl_support_method  = "sni-only"
   }
-
-  depends_on = [ aws_acm_certificate.ehuieric_cert ]
 }
 
+# Allow only this CloudFront distribution to read bucket objects.
 resource "aws_s3_bucket_policy" "static_site225_policy" {
-  bucket = aws_s3_bucket.static_site225.id
+  bucket = aws_s3_bucket.website_bucket.id
 
   policy = jsonencode({
     Version = "2012-10-17"
+
     Statement = [
       {
         Effect = "Allow"
+
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
+
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.static_site225.arn}/*"
+        Resource = "${aws_s3_bucket.website_bucket.arn}/*"
+
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
@@ -178,4 +179,8 @@ resource "aws_s3_bucket_policy" "static_site225_policy" {
       }
     ]
   })
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.website_access
+  ]
 }
