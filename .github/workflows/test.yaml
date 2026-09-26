@@ -47,9 +47,18 @@ jobs:
         working-directory: terraform
 
 
-      - name: Check website bucket in Terraform state
+      - name: Verify website bucket matches
         working-directory: terraform
-        run: terraform state show aws_s3_bucket.static_site225
+        run: |
+          terraform show -json | jq '
+            .values.root_module.resources[]
+            | select(.address == "aws_s3_bucket.static_site225")
+            | {
+                bucket_matches_expected: (.values.bucket == "aws-personal-website-225"),
+                bucket_region_is_us_east_1: (.values.bucket_region == "us-east-1"),
+                resource_region_is_us_east_1: (.values.region == "us-east-1")
+              }
+          '
 
       - name: Terraform Plan
         env: 
