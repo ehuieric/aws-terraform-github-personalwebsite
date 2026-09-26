@@ -158,7 +158,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 resource "aws_s3_bucket_policy" "static_site_policy" {
-    bucket = aws_s3_bucket.static_site.id
+    bucket = aws_s3_bucket.static_site225.id
     policy = jsonencode({
         version = "2021-10-17"
         Statement = [
