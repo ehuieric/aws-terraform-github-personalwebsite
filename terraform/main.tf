@@ -157,7 +157,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   depends_on = [ aws_acm_certificate.ehuieric_cert ]
 }
 
-resource "aws_s3_bucket_policy" "static_site_policy" {
+resource "aws_s3_bucket_policy" "static_site225_policy" {
   bucket = aws_s3_bucket.static_site225.id
 
   policy = jsonencode({
