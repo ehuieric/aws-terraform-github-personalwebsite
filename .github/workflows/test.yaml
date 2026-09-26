@@ -46,6 +46,11 @@ jobs:
         run: terraform init
         working-directory: terraform
 
+
+      - name: Check website bucket in Terraform state
+        working-directory: terraform
+        run: terraform state show aws_s3_bucket.static_site225
+
       - name: Terraform Plan
         env: 
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
