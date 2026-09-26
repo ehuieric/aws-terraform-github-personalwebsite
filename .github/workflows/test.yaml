@@ -66,13 +66,11 @@ jobs:
 
       - name: Terraform Plan
         working-directory: terraform
-        run: terraform plan -input=false -var="bucket_name=aws-personal-website-225"
+        run: terraform plan -input=false -var="bucket_name=aws-personal-website-225" -out=tfplan
 
-      # - name: Terraform Apply
-      #   env:
-      #     TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
-      #   run: terraform apply -auto-approve
-      #   working-directory: terraform
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -input=false tfplan
 
 
       - name: Uploading file to S3 bUCKET
